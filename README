@@ -1,0 +1,15 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3640
+
+
+This script lists following buffers:
+    a) Empty (nameless and had not been viewed nor been saved)
+    b) Not Referred (had been opened in read-only usage)
+    c) Long Time No Save (had been modified and is not saved yet)
+that are left long time.
+And this script lets you close a) and/or b).
+
+Usage:
+    1. (optional) set g:TheOldOnes_Threshold to what you feel "It's long time"
+        default: 60 (60 min.)
+    2. execute  :TheOldOnes
+
