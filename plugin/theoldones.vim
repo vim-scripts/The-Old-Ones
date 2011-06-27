@@ -16,7 +16,6 @@
 "      default: 60 (60 min.)
 "   2. execute  :TheOldOnes
 "
-"
 
 if !exists('g:TheOldOnes_Threshold')
     let g:TheOldOnes_Threshold = 60 "in minute
@@ -41,6 +40,8 @@ augroup END
 
 
 function! s:Execute()
+    let comment_cnt = {(s:COMMENT_EMPTYBUFFER):0, (s:COMMENT_NOTREFERRED):0, (s:COMMENT_NOTSAVED):0}
+
     let oldones = [] "of {nr:bufnr, name:expand('#'.nr.':t'), path:expand('#'.nr.':p:h'), tl:timeline, comment:comment}
     for b in range(1, bufnr('$'))
         let v = getbufvar(b, 'TheOldOnes_lastViewed')
@@ -55,9 +56,15 @@ function! s:Execute()
         let comment = s:GetComment(b, tl)
 
         if comment != ''
+            let comment_cnt[comment] = comment_cnt[comment] + 1
             call add(oldones, {'nr':b, 'name':expand('#'.b.':t'), 'path':expand('#'.b.':p:h'), 'tl':tl, 'comment':comment})
         endif
     endfor
+
+    if len(oldones) == 0 
+        echo 'There are no old ones.'
+        return
+    endif
 
     call sort(oldones, 's:OldonesCompare')
 
@@ -70,25 +77,27 @@ function! s:Execute()
 
         echom '    ' . o.name . ' [' . o.nr . ']  ' . o.path
     endfor
-    
-    echom ' '
-    echo 'a) close all ' . s:COMMENT_EMPTYBUFFER ', b) close all ' . s:COMMENT_NOTREFERRED . ', c) both'
-    echo '[abc]'
 
-    let ans = tolower(nr2char(getchar()))
-    if ans == 'a' || ans == 'c'
-        for o in oldones
-            if o.comment == s:COMMENT_EMPTYBUFFER
-                execute 'silent bdelete! ' . o.nr
-            endif
-        endfor
-    endif
-    if ans == 'b' || ans == 'c'
-        for o in oldones
-            if o.comment == s:COMMENT_NOTREFERRED
-                execute 'silent bdelete! ' . o.nr
-            endif
-        endfor
+    if comment_cnt[s:COMMENT_EMPTYBUFFER] != 0 || comment_cnt[s:COMMENT_NOTREFERRED] != 0
+        echom ' '
+        echo 'a) close all ' . s:COMMENT_EMPTYBUFFER ', b) close all ' . s:COMMENT_NOTREFERRED . ', c) both'
+        echo '[abc]'
+
+        let ans = tolower(nr2char(getchar()))
+        if ans == 'a' || ans == 'c'
+            for o in oldones
+                if o.comment == s:COMMENT_EMPTYBUFFER
+                    execute 'silent bdelete! ' . o.nr
+                endif
+            endfor
+        endif
+        if ans == 'b' || ans == 'c'
+            for o in oldones
+                if o.comment == s:COMMENT_NOTREFERRED
+                    execute 'silent bdelete! ' . o.nr
+                endif
+            endfor
+        endif
     endif
 endfunction
 
@@ -196,4 +205,4 @@ function! s:TlCompare(v1, v2)
     return a:v2.time - a:v1.time
 endfunction
 
-" vim: set et ft=vim sts=4 sw=4 ts=4 tw=78 : 
+" vim: set et ff=unix ft=vim sts=4 sw=4 ts=4 tw=78 : 
